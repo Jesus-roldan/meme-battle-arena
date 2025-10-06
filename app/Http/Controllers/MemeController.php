@@ -9,6 +9,38 @@ use Illuminate\Support\Facades\Storage;
 
 class MemeController extends Controller
 {
+    public function edit(Meme $meme)
+    {
+        // Solo el autor puede editar
+        if (auth()->id() !== $meme->user_id) abort(403);
+
+        return view('memes.edit', compact('meme'));
+    }
+
+    public function update(Request $request, Meme $meme)
+    {
+        // Solo el autor puede actualizar
+        if (auth()->id() !== $meme->user_id) abort(403);
+
+        $validated = $request->validate([
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096', // 4MB
+            'caption' => 'nullable|string|max:255',
+        ]);
+
+        // Si suben nueva imagen, borramos la anterior
+        if ($request->hasFile('image')) {
+            Storage::disk('public')->delete($meme->image_path);
+            $path = $request->file('image')->store('memes', 'public');
+            $meme->image_path = $path;
+        }
+
+        $meme->caption = $validated['caption'] ?? $meme->caption;
+        $meme->save();
+
+        return redirect()->route('battles.show', $meme->battle)->with('success', 'Meme actualizado.');
+    }
+
+
     public function store(Request $request, Battle $battle)
     {
         // No permitir uploads en batallas cerradas
