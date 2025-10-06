@@ -43,6 +43,11 @@ Route::middleware('auth')->group(function () {
     // Subir meme a una batalla
     Route::post('battles/{battle}/memes', [MemeController::class, 'store'])->name('memes.store');
 
+     // Rutas para editar, actualizar y eliminar memes
+    Route::get('memes/{meme}/edit', [MemeController::class, 'edit'])->name('memes.edit');
+    Route::put('memes/{meme}', [MemeController::class, 'update'])->name('memes.update');
+    Route::delete('memes/{meme}', [MemeController::class, 'destroy'])->name('memes.destroy');
+
     // Votar un meme
     Route::post('memes/{meme}/vote', [VoteController::class, 'store'])->name('memes.vote');
 

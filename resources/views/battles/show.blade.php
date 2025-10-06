@@ -1,57 +1,58 @@
 <x-app-layout>
-  <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-4">{{ $battle->title }}</h1>
-    <p class="text-gray-700 mb-4">{{ $battle->description }}</p>
-    <p class="text-sm text-gray-500 mb-6">Límite: {{ $battle->deadline->format('d/m/Y H:i') }}</p>
+  <div class="container mx-auto py-12 px-4">
+    <h1 class="text-4xl font-extrabold mb-6 text-gray-800">{{ $battle->title }}</h1>
+    <p class="text-gray-600 mb-4">{{ $battle->description }}</p>
+    <p class="text-gray-500 mb-8">Fecha límite: {{ $battle->deadline->format('d/m/Y H:i') }}</p>
 
-    @auth
-      @if($battle->deadline->isFuture())
-        <div class="mb-6">
-          <form action="{{ route('memes.store', $battle) }}" method="POST" enctype="multipart/form-data" class="flex gap-2 items-center">
-            @csrf
-            <input type="file" name="image" required class="border rounded px-2 py-1">
-            <input type="text" name="caption" placeholder="Pie (opcional)" class="border rounded px-2 py-1">
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Subir Meme</button>
-          </form>
-        </div>
-      @else
-        <div class="mb-6 text-red-600">Esta batalla ya ha finalizado. No se pueden subir memes.</div>
-      @endif
-    @else
-      <div class="mb-6">
-        <a href="{{ route('login') }}" class="text-indigo-600">Inicia sesión</a> para subir y votar memes.
-      </div>
-    @endauth
+    {{-- Botones Editar / Eliminar de la batalla --}}
+    <div class="mb-6 flex gap-4">
+      @can('update', $battle)
+        <a href="{{ route('battles.edit', $battle) }}" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600">✏️ Editar</a>
+      @endcan
+      @can('delete', $battle)
+        <form action="{{ route('battles.destroy', $battle) }}" method="POST">
+          @csrf
+          @method('DELETE')
+          <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">🗑️ Eliminar</button>
+        </form>
+      @endcan
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      @foreach($memes as $meme)
-        <div class="bg-white rounded shadow p-3">
-          <img src="{{ asset('storage/'.$meme->image_path) }}" alt="Meme" class="w-full h-48 object-cover rounded">
-          <p class="mt-2">{{ $meme->caption }}</p>
-          <p class="text-sm text-gray-600 mt-1">Subido por: {{ $meme->user->name }}</p>
-          <p class="font-semibold mt-2">Votos: {{ $meme->votes_count }}</p>
+    {{-- Lista de memes --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      @foreach($battle->memes as $meme)
+        <div class="bg-white rounded-2xl shadow p-4 relative">
+          <img src="{{ asset('storage/' . $meme->image_path) }}" alt="Meme" class="w-full h-48 object-cover rounded-lg mb-2">
+          <p class="text-sm text-gray-500 mb-2">Subido por: {{ $meme->user->name }}</p>
 
-          @auth
-            @if($battle->deadline->isFuture())
-              @if(!$userVote)
-                <form action="{{ route('memes.vote', $meme) }}" method="POST" class="mt-2">
-                  @csrf
-                  <button class="bg-blue-600 text-white px-3 py-1 rounded">Votar</button>
-                </form>
-              @else
-                @if($userVote->meme_id == $meme->id)
-                  <span class="inline-block mt-2 px-3 py-1 bg-green-100 text-green-800 rounded">Tu voto</span>
-                @else
-                  <span class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-800 rounded">Ya votaste</span>
-                @endif
-              @endif
-            @endif
-          @endauth
-
+          {{-- Botones Editar / Eliminar solo para el autor del meme --}}
+          @can('update', $meme)
+            <a href="{{ route('memes.edit', $meme) }}" class="absolute top-2 right-10 text-yellow-500 font-semibold">✏️</a>
+          @endcan
+          @can('delete', $meme)
+            <form action="{{ route('memes.destroy', $meme) }}" method="POST" class="absolute top-2 right-2">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="text-red-500 font-semibold">🗑️</button>
+            </form>
+          @endcan
         </div>
       @endforeach
     </div>
 
+    {{-- Formulario para subir nuevo meme si la batalla sigue abierta --}}
+    @if(auth()->check() && $battle->deadline >= now())
+      <div class="mt-8 max-w-md">
+        <form action="{{ route('memes.store', $battle) }}" method="POST" enctype="multipart/form-data" class="flex gap-4">
+          @csrf
+          <input type="file" name="image" required class="border border-gray-300 rounded-lg px-3 py-2">
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">📤 Subir Meme</button>
+        </form>
+      </div>
+    @endif
+
   </div>
 </x-app-layout>
+
+
 
