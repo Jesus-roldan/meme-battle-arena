@@ -42,6 +42,8 @@ Route::middleware('auth')->group(function () {
 
     // Subir meme a una batalla
     Route::post('battles/{battle}/memes', [MemeController::class, 'store'])->name('memes.store');
+    // Retirar voto -> DELETE
+    Route::delete('battles/{battle}/vote', [\App\Http\Controllers\VoteController::class, 'destroy'])->name('battles.vote.destroy');
 
      // Rutas para editar, actualizar y eliminar memes
     Route::get('memes/{meme}/edit', [MemeController::class, 'edit'])->name('memes.edit');
@@ -53,6 +55,9 @@ Route::middleware('auth')->group(function () {
 
     // Opcional: retirar voto
     Route::delete('memes/{meme}/vote', [VoteController::class, 'destroy'])->name('memes.vote.destroy');
+
+
 });
+
 
 require __DIR__.'/auth.php';
